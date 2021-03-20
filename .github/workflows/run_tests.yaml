@@ -33,7 +33,7 @@ env:
 
 jobs:
   ultra_matrix_test:
-    name: Ultra Matrix Test of (${{ matrix.python-version }}, ${{ matrix.os }})
+    name: Ultra Matrix Test of (Python ${{ matrix.python-version }} on ${{ matrix.os }})
 
     # Matrix driven OS
     runs-on: ${{ matrix.os }}
@@ -45,6 +45,13 @@ jobs:
     steps:
       # Step 0: Checkout code.
       - uses: actions/checkout@v2
+
+      # Step 0: List conda info.
+      - name: Conda info
+        # Shell command
+        shell: bash -l {0}
+        # Parameters.
+        run: ls -lasth
 
       # Step 1: Set Matrix driven Conda Env with Python Env
       - uses: conda-incubator/setup-miniconda@v2
@@ -60,7 +67,7 @@ jobs:
         run: conda info
 
       # Step 3: Conda list packages
-      - name: Conda list
+      - name: Conda list pre installation
         # List
         shell: pwsh
         run: conda list
@@ -68,18 +75,24 @@ jobs:
       # Step 4:
       - name: Installation of the repository
         run: |
-          cd ~/build/neuropoly/axondeepseg
+          cd /home/runner/work/axondeepseg/axondeepseg/AxonDeepSeg/
           pip install -e .
           pip install python-coveralls
 
-      # Step 5:
+      # Step 5: Conda list packages
+      - name: Conda list post installation
+        # List
+        shell: pwsh
+        run: conda list
+
+      # Step 6:
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      # Step 6:
+      # Step 7:
       - name: Test with pytest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
