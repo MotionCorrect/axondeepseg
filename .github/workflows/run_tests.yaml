@@ -54,7 +54,7 @@ jobs:
 
       # Step 2: Ubuntu
       - name: Install Conda Env Ubuntu
-        if: ${{matrix.os == "ubuntu-latest"}}
+        if: matrix.os == 'ubuntu-latest'
         uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: ads_venv
@@ -63,7 +63,7 @@ jobs:
 
       # Step 2: OS X
       - name: Install Conda Env macOS
-        if: ${{matrix.os == "macos-latest"}
+        if: matrix.os == 'macos-latest'
         uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: ads_venv
@@ -72,7 +72,7 @@ jobs:
 
       # Step 2: Windows
       - name: Install Conda Env Windows
-        if: ${{matrix.os == "windows-latest"}}
+        if: matrix.os == 'windows-latest'
         uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: ads_new
