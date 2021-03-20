@@ -1,9 +1,7 @@
 # This workflow will install Python dependencies, run tests and lint with a variety of Python versions
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-# Official DOc on GitHub Workflow Syntax: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
-
-# Conda based env testing: https://github.com/conda-incubator/setup-miniconda
+# Official DOc on GitHub WOrkflow Syntax: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
 name: Run tests
 
 on:
@@ -32,54 +30,69 @@ env:
   DEBIAN_FRONTEND: 'noninteractive'
 
 jobs:
-  ultra_matrix_test:
-    name: Ultra Matrix Test of (${{ matrix.python-version }}, ${{ matrix.os }})
 
-    # Matrix driven OS
-    runs-on: ${{ matrix.os }}
+  # Job 1: Windows testing.
+  test_win:
+    name: Test AxonDeepSeg on Windows Server 2019
+    runs-on: windows-latest
+
+  # Job 2: Mac Catalina testing.
+  test_mac_10:
+    name: Test AxonDeepSeg on macOS Catalina
+    runs-on: macos-10.15
+
+  # Job 3: Mac Big Sur testing.
+  test_mac_11:
+    name: Test AxonDeepSeg on macOS Big Sur
+    runs-on: macos-11.0
+
+  test_ubuntu_18:
+    name: Ubuntu Latest
+    runs-on: ubuntu-latest
+
+  test_ubuntu_20:
+
+    name: Ubuntu Latest
+    runs-on: ubuntu-latest
+
+    # Matrix testing
     strategy:
-      fail-fast: false
       matrix:
-        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
-        python-version: ["3.7", "3.8"]
+        python-version: [3.7, 3.8]
+        test-name:
+          - integration-test
     steps:
-      # Step 0: Checkout code.
+      # Step 1: Checkout code.
       - uses: actions/checkout@v2
-
-      # Step 1: Set Matrix driven Conda Env with Python Env
-      - uses: conda-incubator/setup-miniconda@v2
+      # Step 2: Setup python version.
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
         with:
-          auto-update-conda: true
           python-version: ${{ matrix.python-version }}
-
-      # Step 2: List conda info.
-      - name: Conda info
-        # Shell command
-        shell: bash -l {0}
-        # Parameters.
-        run: conda info
-
-      # Step 3: Conda list packages
-      - name: Conda list
-        # List
-        shell: pwsh
-        run: conda list
-
-      # Step 4:
-      - name: Installation of the repository
+      # Step 3:
+      - name: Installation of MiniConda
         run: |
+          echo "Installation of MiniConda"
+          cd ~
+          if [ "$TRAVIS_OS_NAME" = "osx" ]; then curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o ~/miniconda.sh; fi
+          if [ "$TRAVIS_OS_NAME" = "linux" ]; then wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh; fi
+          bash ~/miniconda.sh -b -p $HOME/miniconda
+          echo ". ~/miniconda/etc/profile.d/conda.sh" >> ~/.bashrc
+          source ~/.bashrc
+          yes | conda create -n ads_venv python=3.7
+          conda activate ads_venv
+          echo "Installation of the repository"
           cd ~/build/neuropoly/axondeepseg
           pip install -e .
-          pip install python-coveralls
-
-      # Step 5:
+          pip install python-coveralls  # Add me to install python-coveralls
+      # Step 4:
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
+          #flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-      # Step 6:
+      # Step 5:
       - name: Test with pytest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -90,7 +103,7 @@ jobs:
           coveralls --service=github
 
   coveralls:
-    needs: ultra_matrix_test
+    needs: test_ubuntu_18
     runs-on: ubuntu-latest
     container: python:3-slim
     steps:
@@ -99,4 +112,3 @@ jobs:
           pip3 install --upgrade coveralls
           coveralls --finish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
