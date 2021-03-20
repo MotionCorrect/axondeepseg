@@ -46,8 +46,8 @@ jobs:
       # Step 0: Checkout code.
       - uses: actions/checkout@v2
 
-      # Step 0: List conda info.
-      - name: Conda info
+      # Step 1: List conda info.
+      - name: List all current repository files and modification date
         # Shell command
         shell: bash -l {0}
         # Parameters.
@@ -75,7 +75,7 @@ jobs:
       # Step 4:
       - name: Installation of the repository
         run: |
-          cd /home/runner/work/axondeepseg/axondeepseg/AxonDeepSeg/
+          cd /home/runner/work/axondeepseg/axondeepseg/
           pip install -e .
           pip install python-coveralls
 
