@@ -41,7 +41,6 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
-        python-version: ["3.7", "3.8"]
     steps:
       # Step 0: Checkout code.
       - uses: actions/checkout@v2
@@ -53,30 +52,46 @@ jobs:
         # Parameters.
         run: ls -lasth
 
-      # Step 1: Set Matrix driven Conda Env with Python Env
-      - uses: conda-incubator/setup-miniconda@v2
+      # Step 2: Ubuntu
+      - name: Install Conda Env Ubuntu
+        if: ${{matrix.os == "ubuntu-latest"}}
+        uses: conda-incubator/setup-miniconda@v2
         with:
+          activate-environment: ads_venv
           auto-update-conda: true
-          python-version: ${{ matrix.python-version }}
+          environment-file: environment_Linux.yml
 
-      # Step 2: List conda info.
-      - name: Conda info
-        # Shell command
-        shell: bash -l {0}
-        # Parameters.
-        run: conda info
+      # Step 2: OS X
+      - name: Install Conda Env macOS
+        if: ${{matrix.os == "macos-latest"}
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: ads_venv
+          auto-update-conda: true
+          environment-file: environment_macOS.yml
 
-      # Step 3: Conda list packages
-      - name: Conda list pre installation
+      # Step 2: Windows
+      - name: Install Conda Env Windows
+        if: ${{matrix.os == "windows-latest"}}
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: ads_new
+          auto-update-conda: true
+          environment-file: environment_Windwos.yml
+
+      # Step 3: List conda info, conda list packages
+      - name: Conda info and list
         # List
         shell: pwsh
-        run: conda list
+        run: |
+        conda info
+        conda list
 
       # Step 4:
       - name: Installation of the repository
         run: |
           cd /home/runner/work/axondeepseg/axondeepseg/
-          pip install -e .
+          pip install --verbose -e .
           pip install python-coveralls
 
       # Step 5: Conda list packages
@@ -85,14 +100,14 @@ jobs:
         shell: pwsh
         run: conda list
 
-      # Step 6:
+      # Step 6: Lint
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      # Step 7:
+      # Step 7: Test
       - name: Test with pytest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
