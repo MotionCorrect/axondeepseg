@@ -92,9 +92,9 @@ jobs:
       # Step 4:
       - name: Installation of the repository
         run: |
-          cd /home/runner/work/axondeepseg/axondeepseg/
           pip install --verbose -e .
           pip install python-coveralls
+
 
       # Step 5: Conda list packages
       - name: Conda list post installation
