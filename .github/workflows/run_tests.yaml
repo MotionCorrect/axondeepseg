@@ -18,7 +18,7 @@ on:
     branches:
       - '*'
 
-  # Trigger every
+  # Cron Trigger
   schedule:
     # https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#onschedule
     # i.e. this runs every day at 4:33AM for the master branch.
@@ -33,33 +33,36 @@ env:
 
 jobs:
   ultra_matrix_test:
-    name: Ultra Matrix Test of (Python ${{ matrix.python-version }} on ${{ matrix.os }})
+    name: Matrix Test of Python ${{ matrix.python-version }} on ${{ matrix.os }}
 
     # Matrix driven OS
     runs-on: ${{ matrix.os }}
 
-    # Default shell for ALL steps.
+    # Default shell for ALL subsequent steps.
     defaults:
       run:
         shell: bash -l {0}
 
+    # Defining matrix for OS and Python
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
-        python-version: ["3.7", "3.8"]
+        os: [ "ubuntu-latest", "macos-latest", "windows-latest" ]
+        python-version: [ "3.7", "3.8", "3.9" ]
+
+    # Main steps for the test to be reproduced across OS x Python
     steps:
       # Step 0: Checkout code.
       - uses: actions/checkout@v2
 
-      # Step 1: List main repo and print path
+      # Step 1: List main repo by time modified, and print path
       - name: List all current repository files and modification date
         # Parameters.
         run: |
           ls -lasth
           pwd
 
-      # Step 2: Install Environment.
+      # Step 2: Install environment.
       - name: Install Conda Env All OS
         uses: conda-incubator/setup-miniconda@v2
         with:
@@ -70,7 +73,6 @@ jobs:
 
       # Step 3: List conda info, conda packages
       - name: Conda info and list
-        shell: bash -l {0}
         # List
         run: |
           conda info
@@ -113,14 +115,16 @@ jobs:
           pytest . -v --cov AxonDeepSeg/ --cov-report term-missing
           coveralls --service=github
 
+  # This step is MANDATORY and used to indicate matrix completion to coveralls.io
+  # See here: https://coveralls-python.readthedocs.io/en/latest/usage/configuration.html#github-actions-support
   coveralls:
     needs: ultra_matrix_test
     runs-on: ubuntu-latest
     container: python:3-slim
     steps:
       - name: Finished
-        run: |
-          pip install coveralls
-          coveralls --finish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pip3 install --upgrade coveralls
+          coveralls --finish
