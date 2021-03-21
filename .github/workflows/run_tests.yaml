@@ -109,7 +109,7 @@ jobs:
           COVERALLS_FLAG_NAME: ${{ matrix.test-name }}
           COVERALLS_PARALLEL: true
         run: |
-          pip install python-coveralls
+          pip install coveralls
           pytest . -v --cov AxonDeepSeg/ --cov-report term-missing
           coveralls --service=github
 
@@ -120,7 +120,7 @@ jobs:
     steps:
       - name: Finished
         run: |
-          pip3 install --upgrade coveralls
+          pip install coveralls
           coveralls --finish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
