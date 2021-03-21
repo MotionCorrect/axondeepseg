@@ -72,9 +72,10 @@ jobs:
           conda info
           conda list
 
-      # Step 4: Install main AxonDeepSeg repository
-      - name: Installation of the repository
+      # Step 4: Activate and Install main AxonDeepSeg repository
+      - name: Installation of the main ADS repository
         run: |
+          conda activate ads_venv
           pip install --verbose -e .
 
       # Step 5: Conda list packages POST ADS.
@@ -97,8 +98,6 @@ jobs:
       - name: Quick Test
         run: |
           axondeepseg_test
-          coveralls --service=github
-
 
       # Step 8: PyTest
       - name: Test with pytest
