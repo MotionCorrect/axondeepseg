@@ -37,6 +37,12 @@ jobs:
 
     # Matrix driven OS
     runs-on: ${{ matrix.os }}
+
+    # Default shell for ALL steps.
+    defaults:
+      run:
+        shell: bash -l {0}
+
     strategy:
       fail-fast: false
       matrix:
@@ -64,6 +70,7 @@ jobs:
 
       # Step 3: List conda info, conda packages
       - name: Conda info and list
+        shell: bash -l {0}
         # List
         run: |
           conda info
