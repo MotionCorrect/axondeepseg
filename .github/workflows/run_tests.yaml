@@ -41,12 +41,12 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
-        python-version: ["3.7"]
+        python-version: ["3.7", "3.8"]
     steps:
       # Step 0: Checkout code.
       - uses: actions/checkout@v2
 
-      # Step 1: List conda info.
+      # Step 1: List main repo and print path
       - name: List all current repository files and modification date
         # Shell command
         shell: bash -l {0}
@@ -55,37 +55,16 @@ jobs:
           ls -lasth
           pwd
 
-      # Step 2: Ubuntu
-      - name: Install Conda Env Ubuntu
-        if: matrix.os == 'ubuntu-latest'
+      # Step 2: Install Environment.
+      - name: Install Conda Env All OS
         uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{matrix.python-version}}
           activate-environment: ads_venv
           auto-update-conda: true
-          environment-file: environment_Linux.yml
+          environment-file: environment.yml
 
-      # Step 2: OS X
-      - name: Install Conda Env macOS
-        if: matrix.os == 'macos-latest'
-        uses: conda-incubator/setup-miniconda@v2
-        with:
-          python-version: ${{matrix.python-version}}
-          activate-environment: ads_venv
-          auto-update-conda: true
-          environment-file: environment_macOS.yml
-
-      # Step 2: Windows
-      - name: Install Conda Env Windows
-        if: matrix.os == 'windows-latest'
-        uses: conda-incubator/setup-miniconda@v2
-        with:
-          python-version: ${{matrix.python-version}}
-          activate-environment: ads_new
-          auto-update-conda: true
-          environment-file: environment_Windows.yml
-
-      # Step 3: List conda info, conda list packages
+      # Step 3: List conda info, conda packages
       - name: Conda info and list
         # List
         shell: pwsh
@@ -93,35 +72,43 @@ jobs:
           conda info
           conda list
 
-      # Step 4:
+      # Step 4: Install main AxonDeepSeg repository
       - name: Installation of the repository
         run: |
           pip install --verbose -e .
-          pip install python-coveralls
 
-
-      # Step 5: Conda list packages
+      # Step 5: Conda list packages POST ADS.
       - name: Conda list post installation
         # List
         shell: pwsh
-        run: conda list
+        run: |
+          conda info
+          conda list
 
-      # Step 6: Lint
-      - name: Lint with flake8
+      # Step 6: Flake 8 Linting
+      - name: Linting with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           pip install flake8
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      # Step 7: Test
+      # Step 7: Localized Test
+      - name: Quick Test
+        run: |
+          axondeepseg_test
+          coveralls --service=github
+
+
+      # Step 8: PyTest
       - name: Test with pytest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: ${{ matrix.test-name }}
           COVERALLS_PARALLEL: true
         run: |
-          py.test . -v --cov AxonDeepSeg/ --cov-report term-missing
+          pip install python-coveralls
+          pytest . -v --cov AxonDeepSeg/ --cov-report term-missing
           coveralls --service=github
 
   coveralls:
